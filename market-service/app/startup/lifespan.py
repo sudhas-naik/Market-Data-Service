@@ -1,0 +1,51 @@
+"""FastAPI lifespan manager for startup/shutdown."""
+
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from app.brokers.factory import get_market_provider
+from app.cache.redis_client import close_redis, get_redis
+from app.core.logging import get_logger
+from app.db.session import async_session_factory
+from app.dependencies.container import set_kafka_producer_instance
+from app.kafka.producer import KafkaEventProducer
+from app.workers.news_worker import NewsWorker
+from app.workers.quote_refresh_worker import QuoteRefreshWorker
+
+logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Manage application lifecycle: Kafka, workers, connections."""
+    kafka_producer = KafkaEventProducer()
+    quote_worker: QuoteRefreshWorker | None = None
+    news_worker: NewsWorker | None = None
+
+    try:
+        await kafka_producer.start()
+        set_kafka_producer_instance(kafka_producer)
+
+        redis = await get_redis()
+        provider = get_market_provider()
+
+        quote_worker = QuoteRefreshWorker(provider, redis, kafka_producer)
+        news_worker = NewsWorker(provider, async_session_factory, kafka_producer)
+
+        await quote_worker.start()
+        await news_worker.start()
+
+        logger.info("application_started")
+        yield
+    finally:
+        if quote_worker:
+            await quote_worker.stop()
+        if news_worker:
+            await news_worker.stop()
+
+        await kafka_producer.stop()
+        set_kafka_producer_instance(None)
+        await close_redis()
+        logger.info("application_stopped")
