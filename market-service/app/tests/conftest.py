@@ -9,12 +9,11 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.brokers.base import MarketProvider
 from app.cache.quote_cache import QuoteCache
 from app.db.base import Base
-from app.kafka.producer import KafkaEventProducer
 from app.schemas.market import CandleInterval, OHLCVCandle, QuoteResponse, SearchResult
 from app.services.market_service import MarketService
+from app.services.market_provider import MarketProvider
 from app.services.watchlist_service import WatchlistService
 from app.repositories.watchlist_repository import WatchlistRepository
 
@@ -86,22 +85,13 @@ def mock_redis() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_kafka() -> AsyncMock:
-    kafka = AsyncMock(spec=KafkaEventProducer)
-    kafka.publish_quote_updated = AsyncMock()
-    kafka.publish_tick = AsyncMock()
-    kafka.publish_news = AsyncMock()
-    return kafka
-
-
-@pytest.fixture
 def quote_cache(mock_redis: AsyncMock) -> QuoteCache:
     return QuoteCache(mock_redis)
 
 
 @pytest.fixture
-def market_service(mock_provider: MockMarketProvider, quote_cache: QuoteCache, mock_kafka: AsyncMock) -> MarketService:
-    return MarketService(mock_provider, quote_cache, mock_kafka)
+def market_service(mock_provider: MockMarketProvider, quote_cache: QuoteCache) -> MarketService:
+    return MarketService(mock_provider, quote_cache)
 
 
 @pytest_asyncio.fixture

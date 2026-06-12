@@ -37,20 +37,16 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     redis_quote_ttl_seconds: int = 10
 
-    # Kafka
-    kafka_bootstrap_servers: str = "localhost:9092"
-    kafka_client_id: str = "market-service"
-    kafka_topic_quote_updated: str = "market.quote.updated"
-    kafka_topic_tick: str = "market.tick"
-    kafka_topic_candle_completed: str = "market.candle.completed"
-    kafka_topic_news: str = "market.news"
-
-    # Market provider
-    market_provider: Literal["mock", "polygon", "alpaca", "yahoo", "zerodha", "upstox"] = "mock"
-
     # Workers
     quote_refresh_interval_seconds: float = 1.0
     news_fetch_interval_seconds: int = 300
+
+    # Market Provider
+    market_provider: Literal["mock", "zerodha"] = "mock"
+    zerodha_api_key: str | None = None
+    zerodha_api_secret: str | None = None
+    zerodha_access_token: str | None = None
+    zerodha_default_exchange: str = "NSE"
 
     @property
     def is_development(self) -> bool:

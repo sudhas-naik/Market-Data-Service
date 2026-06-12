@@ -5,7 +5,7 @@ Production-grade stock market data microservice built with FastAPI, Clean Archit
 ## Stack
 
 - Python 3.13, FastAPI, SQLAlchemy 2.0 (async), Alembic, PostgreSQL
-- Redis, Kafka (aiokafka), Pydantic v2, structlog, uv
+- Redis, Pydantic v2, structlog, uv
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ uv sync --all-extras
 cp .env.example .env
 
 # Start infrastructure
-docker compose up -d postgres redis kafka
+docker compose up -d postgres redis
 
 # Run migrations
 uv run alembic upgrade head
@@ -67,4 +67,4 @@ docker compose logs -f market-service
 | Example quote | http://localhost:8001/market/quote/AAPL |
 
 > Port **8001** is used (not 8000) because something on your machine already uses 8000.
-> Wait ~30–60 seconds on first start while Kafka/Postgres become healthy.
+> Wait ~30–60 seconds on first start while Postgres becomes healthy.

@@ -37,12 +37,10 @@ async def test_get_quote_cache_hit(market_service, mock_redis, quote_cache):
 
 
 @pytest.mark.asyncio
-async def test_refresh_and_publish_quote(market_service, mock_kafka, mock_redis):
-    quote = await market_service.refresh_and_publish_quote("AAPL")
+async def test_refresh_quote(market_service, mock_redis):
+    quote = await market_service.refresh_quote("AAPL")
 
     assert quote.symbol == "AAPL"
-    mock_kafka.publish_quote_updated.assert_called_once()
-    mock_kafka.publish_tick.assert_called_once()
     mock_redis.setex.assert_called_once()
 
 

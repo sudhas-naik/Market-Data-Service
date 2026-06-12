@@ -4,12 +4,11 @@ import asyncio
 
 from redis.asyncio import Redis
 
-from app.brokers.base import MarketProvider
 from app.cache.quote_cache import QuoteCache
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
-from app.kafka.producer import KafkaEventProducer
 from app.services.market_service import MarketService
+from app.services.market_provider import MarketProvider
 
 logger = get_logger(__name__)
 
@@ -18,18 +17,17 @@ _DEFAULT_SYMBOLS = ["AAPL", "TSLA", "MSFT", "GOOGL", "AMZN"]
 
 
 class QuoteRefreshWorker:
-    """Periodically fetches latest prices, caches in Redis, and publishes Kafka events."""
+    """Periodically fetches latest prices and caches them in Redis."""
 
     def __init__(
         self,
         provider: MarketProvider,
         redis: Redis,
-        kafka_producer: KafkaEventProducer,
         settings: Settings | None = None,
         symbols: list[str] | None = None,
     ) -> None:
         self._settings = settings or get_settings()
-        self._service = MarketService(provider, QuoteCache(redis), kafka_producer)
+        self._service = MarketService(provider, QuoteCache(redis))
         self._symbols = symbols or _DEFAULT_SYMBOLS
         self._interval = self._settings.quote_refresh_interval_seconds
         self._task: asyncio.Task | None = None
@@ -54,7 +52,7 @@ class QuoteRefreshWorker:
         while self._running:
             for symbol in self._symbols:
                 try:
-                    await self._service.refresh_and_publish_quote(symbol)
+                    await self._service.refresh_quote(symbol)
                 except Exception:
                     logger.exception("quote_refresh_error", symbol=symbol)
             await asyncio.sleep(self._interval)

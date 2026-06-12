@@ -4,12 +4,11 @@ import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.brokers.base import MarketProvider
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
-from app.kafka.producer import KafkaEventProducer
 from app.repositories.market_news_repository import MarketNewsRepository
 from app.services.news_service import NewsService
+from app.services.market_provider import MarketProvider
 
 logger = get_logger(__name__)
 
@@ -21,12 +20,10 @@ class NewsWorker:
         self,
         provider: MarketProvider,
         session_factory: async_sessionmaker[AsyncSession],
-        kafka_producer: KafkaEventProducer,
         settings: Settings | None = None,
     ) -> None:
         self._provider = provider
         self._session_factory = session_factory
-        self._kafka = kafka_producer
         self._settings = settings or get_settings()
         self._interval = self._settings.news_fetch_interval_seconds
         self._task: asyncio.Task | None = None
@@ -54,7 +51,6 @@ class NewsWorker:
                     service = NewsService(
                         self._provider,
                         MarketNewsRepository(session),
-                        self._kafka,
                     )
                     await service.fetch_and_store_news()
                     await session.commit()

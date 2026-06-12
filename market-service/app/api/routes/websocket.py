@@ -4,11 +4,11 @@ import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app.brokers.factory import get_market_provider
 from app.cache.quote_cache import QuoteCache
 from app.cache.redis_client import get_redis
 from app.core.logging import get_logger
 from app.schemas.websocket import QuotePushMessage, SubscribeMessage
+from app.services.market_provider import get_market_provider
 
 router = APIRouter()
 logger = get_logger(__name__)

@@ -9,7 +9,7 @@ echo "  API:        http://localhost:8001"
 echo "  Swagger UI: http://localhost:8001/docs"
 echo "  Health:     http://localhost:8001/health"
 echo "=============================================="
-echo "  (Wait ~30s for Kafka/Postgres healthchecks)"
+echo "  (Wait ~30s for Postgres healthchecks)"
 echo "=============================================="
 echo ""
 

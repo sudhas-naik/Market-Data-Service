@@ -3,11 +3,9 @@
 import time
 from datetime import datetime
 
-from app.brokers.base import MarketProvider
 from app.cache.quote_cache import QuoteCache
 from app.core.logging import get_logger
-from app.events.market_events import QuoteUpdatedEvent, TickEvent
-from app.kafka.producer import KafkaEventProducer
+from app.services.market_provider import MarketProvider
 from app.schemas.market import CandleInterval, CandleResponse, QuoteResponse, SearchResponse
 
 logger = get_logger(__name__)
@@ -20,11 +18,9 @@ class MarketService:
         self,
         provider: MarketProvider,
         cache: QuoteCache,
-        kafka_producer: KafkaEventProducer | None = None,
     ) -> None:
         self._provider = provider
         self._cache = cache
-        self._kafka = kafka_producer
 
     async def get_quote(self, symbol: str) -> QuoteResponse:
         """Return quote from cache first, fallback to provider."""
@@ -48,8 +44,8 @@ class MarketService:
         await self._cache.set(quote)
         return quote
 
-    async def refresh_and_publish_quote(self, symbol: str) -> QuoteResponse:
-        """Fetch quote from provider, cache it, and publish Kafka events."""
+    async def refresh_quote(self, symbol: str) -> QuoteResponse:
+        """Fetch quote from provider and cache it."""
         start = time.perf_counter()
         quote = await self._provider.get_quote(symbol)
         latency_ms = (time.perf_counter() - start) * 1000
@@ -62,27 +58,6 @@ class MarketService:
         )
 
         await self._cache.set(quote)
-
-        if self._kafka:
-            await self._kafka.publish_quote_updated(
-                QuoteUpdatedEvent(
-                    symbol=quote.symbol,
-                    exchange=quote.exchange,
-                    price=quote.price,
-                    change=quote.change,
-                    volume=quote.volume,
-                    timestamp=quote.timestamp,
-                )
-            )
-            await self._kafka.publish_tick(
-                TickEvent(
-                    symbol=quote.symbol,
-                    price=quote.price,
-                    volume=quote.volume,
-                    timestamp=quote.timestamp,
-                )
-            )
-
         return quote
 
     async def get_candles(
