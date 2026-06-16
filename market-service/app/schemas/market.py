@@ -20,16 +20,16 @@ class CandleInterval(str, Enum):
 class QuoteResponse(BaseModel):
     """Latest market quote."""
 
-    symbol: str = Field(..., examples=["AAPL"])
-    exchange: str = Field(..., examples=["NASDAQ"])
+    symbol: str = Field(..., examples=["RELIANCE"])
+    exchange: str = Field(..., examples=["NSE"])
     price: float = Field(..., examples=[195.20])
     change: float = Field(..., examples=[2.5])
     volume: int = Field(..., examples=[230000])
     timestamp: datetime = Field(..., examples=["2026-06-10T14:30:00Z"])
 
     model_config = {"json_schema_extra": {"examples": [{
-        "symbol": "AAPL",
-        "exchange": "NASDAQ",
+        "symbol": "RELIANCE",
+        "exchange": "NSE",
         "price": 195.20,
         "change": 2.5,
         "volume": 230000,

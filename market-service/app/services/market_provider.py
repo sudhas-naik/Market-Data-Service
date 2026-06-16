@@ -2,11 +2,9 @@
 
 import asyncio
 import csv
-import hashlib
-import random
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from functools import lru_cache
 from io import StringIO
 from typing import Any
@@ -16,19 +14,6 @@ import httpx
 from app.core.config import get_settings
 from app.exceptions import MarketProviderException, SymbolNotFound
 from app.schemas.market import CandleInterval, OHLCVCandle, QuoteResponse, SearchResult
-
-_MOCK_SYMBOLS: list[dict[str, str]] = [
-    {"symbol": "AAPL", "exchange": "NASDAQ", "company_name": "Apple Inc.", "sector": "Technology"},
-    {"symbol": "TSLA", "exchange": "NASDAQ", "company_name": "Tesla Inc.", "sector": "Consumer"},
-    {"symbol": "MSFT", "exchange": "NASDAQ", "company_name": "Microsoft Corp.", "sector": "Technology"},
-    {"symbol": "GOOGL", "exchange": "NASDAQ", "company_name": "Alphabet Inc.", "sector": "Technology"},
-    {"symbol": "AMZN", "exchange": "NASDAQ", "company_name": "Amazon.com Inc.", "sector": "Consumer"},
-    {"symbol": "META", "exchange": "NASDAQ", "company_name": "Meta Platforms Inc.", "sector": "Technology"},
-    {"symbol": "NVDA", "exchange": "NASDAQ", "company_name": "NVIDIA Corp.", "sector": "Technology"},
-    {"symbol": "JPM", "exchange": "NYSE", "company_name": "JPMorgan Chase & Co.", "sector": "Financial"},
-    {"symbol": "V", "exchange": "NYSE", "company_name": "Visa Inc.", "sector": "Financial"},
-    {"symbol": "APP", "exchange": "NASDAQ", "company_name": "AppLovin Corp.", "sector": "Technology"},
-]
 
 
 class MarketProvider(ABC):
@@ -59,126 +44,6 @@ class MarketProvider(ABC):
     @abstractmethod
     async def fetch_news(self, symbol: str | None = None) -> list[dict]:
         """Fetch market news, optionally filtered by symbol."""
-
-
-class MockMarketProvider(MarketProvider):
-    """Generates deterministic mock market data."""
-
-    def _base_price(self, symbol: str) -> float:
-        h = int(hashlib.md5(symbol.encode()).hexdigest()[:8], 16)  # noqa: S324
-        return 50.0 + (h % 500)
-
-    def _find_symbol(self, symbol: str) -> dict[str, str] | None:
-        upper = symbol.upper()
-        return next((s for s in _MOCK_SYMBOLS if s["symbol"] == upper), None)
-
-    async def get_quote(self, symbol: str) -> QuoteResponse:
-        info = self._find_symbol(symbol)
-        if info is None:
-            from app.exceptions import SymbolNotFound
-
-            raise SymbolNotFound(symbol)
-
-        base = self._base_price(symbol)
-        price = round(base + random.uniform(-2.0, 2.0), 2)  # noqa: S311
-        change = round(random.uniform(-5.0, 5.0), 2)  # noqa: S311
-        volume = random.randint(100_000, 5_000_000)  # noqa: S311
-
-        return QuoteResponse(
-            symbol=info["symbol"],
-            exchange=info["exchange"],
-            price=price,
-            change=change,
-            volume=volume,
-            timestamp=datetime.now(UTC),
-        )
-
-    async def get_candles(
-        self,
-        symbol: str,
-        interval: CandleInterval,
-        from_dt: datetime,
-        to_dt: datetime,
-    ) -> list[OHLCVCandle]:
-        info = self._find_symbol(symbol)
-        if info is None:
-            from app.exceptions import SymbolNotFound
-
-            raise SymbolNotFound(symbol)
-
-        interval_map = {
-            CandleInterval.ONE_MIN: timedelta(minutes=1),
-            CandleInterval.FIVE_MIN: timedelta(minutes=5),
-            CandleInterval.FIFTEEN_MIN: timedelta(minutes=15),
-            CandleInterval.ONE_HOUR: timedelta(hours=1),
-            CandleInterval.ONE_DAY: timedelta(days=1),
-            CandleInterval.ONE_WEEK: timedelta(weeks=1),
-        }
-        step = interval_map[interval]
-        seed = self._base_price(symbol)
-        candles: list[OHLCVCandle] = []
-        current = from_dt
-
-        while current <= to_dt:
-            open_p = round(seed + random.uniform(-1, 1), 2)  # noqa: S311
-            close_p = round(open_p + random.uniform(-2, 2), 2)  # noqa: S311
-            high_p = round(max(open_p, close_p) + random.uniform(0, 1), 2)  # noqa: S311
-            low_p = round(min(open_p, close_p) - random.uniform(0, 1), 2)  # noqa: S311
-            volume = random.randint(10_000, 500_000)  # noqa: S311
-
-            candles.append(
-                OHLCVCandle(
-                    timestamp=current,
-                    open=open_p,
-                    high=high_p,
-                    low=low_p,
-                    close=close_p,
-                    volume=volume,
-                )
-            )
-            seed = close_p
-            current += step
-
-        return candles
-
-    async def search_symbol(self, query: str) -> list[SearchResult]:
-        q = query.lower().strip()
-        results = [
-            SearchResult(
-                symbol=s["symbol"],
-                exchange=s["exchange"],
-                company_name=s["company_name"],
-            )
-            for s in _MOCK_SYMBOLS
-            if q in s["symbol"].lower() or q in s["company_name"].lower()
-        ]
-        return results[:20]
-
-    async def subscribe_ticks(self, symbols: list[str]) -> AsyncIterator[QuoteResponse]:
-        while True:
-            for symbol in symbols:
-                try:
-                    yield await self.get_quote(symbol)
-                except Exception:
-                    continue
-            await asyncio.sleep(1)
-
-    async def fetch_news(self, symbol: str | None = None) -> list[dict]:
-        now = datetime.now(UTC)
-        symbols = [symbol.upper()] if symbol else [s["symbol"] for s in _MOCK_SYMBOLS[:5]]
-        news = []
-        for sym in symbols:
-            info = self._find_symbol(sym)
-            if info:
-                news.append(
-                    {
-                        "symbol": sym,
-                        "headline": f"{info['company_name']} reports strong quarterly earnings",
-                        "url": f"https://news.example.com/{sym.lower()}/earnings",
-                        "published_at": now.isoformat(),
-                    }
-                )
-        return news
 
 
 class ZerodhaMarketProvider(MarketProvider):
@@ -239,6 +104,7 @@ class ZerodhaMarketProvider(MarketProvider):
         try:
             response = await self._client.get(path, params=params, headers=self._auth_headers())
             response.raise_for_status()
+
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 403:
                 raise MarketProviderException(
@@ -376,19 +242,46 @@ class ZerodhaMarketProvider(MarketProvider):
     async def fetch_news(self, symbol: str | None = None) -> list[dict]:
         return []
 
+from kiteconnect import KiteConnect
+
 
 @lru_cache
 def get_market_provider() -> MarketProvider:
-    """Return the cached market provider singleton."""
+    """Return the cached Zerodha market provider singleton."""
     settings = get_settings()
-    if settings.market_provider == "zerodha":
-        if not settings.zerodha_api_key:
+
+    if not settings.zerodha_api_key:
+        raise MarketProviderException("ZERODHA_API_KEY is required for market data")
+
+    access_token = settings.zerodha_access_token
+
+    # print(f'DEBUG Zerodha access token generated from request token: {access_token[:5]}...')
+
+    if not access_token:
+        if not settings.zerodha_api_secret:
             raise MarketProviderException(
-                "ZERODHA_API_KEY is required when MARKET_PROVIDER=zerodha"
+                "ZERODHA_API_SECRET is required to generate an access token from "
+                "ZERODHA_REQUEST_TOKEN"
             )
-        return ZerodhaMarketProvider(
-            api_key=settings.zerodha_api_key,
-            access_token=settings.zerodha_access_token,
-            default_exchange=settings.zerodha_default_exchange,
+
+        kite = KiteConnect(api_key=settings.zerodha_api_key)
+
+        session = kite.generate_session(
+            request_token=settings.zerodha_access_token,
+            api_secret=settings.zerodha_api_secret,
         )
-    return MockMarketProvider()
+
+        access_token = session["access_token"]
+
+        print(f'DEBUG Zerodha access token generated from request token: {access_token[:5]}...')
+
+    if not access_token:
+        raise MarketProviderException(
+            "Either ZERODHA_ACCESS_TOKEN or ZERODHA_REQUEST_TOKEN must be provided"
+        )
+
+    return ZerodhaMarketProvider(
+        api_key=settings.zerodha_api_key,
+        access_token=access_token,
+        default_exchange=settings.zerodha_default_exchange,
+    )

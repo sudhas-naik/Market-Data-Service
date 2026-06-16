@@ -40,7 +40,7 @@ async def get_quote(
 )
 async def get_candles(
     service: Annotated[MarketService, Depends(get_market_service)],
-    symbol: str = Query(..., min_length=1, max_length=20, examples=["AAPL"]),
+    symbol: str = Query(..., min_length=1, max_length=20, examples=["RELIANCE"]),
     interval: CandleInterval = Query(CandleInterval.ONE_DAY, examples=["1d"]),
     from_dt: datetime = Query(..., alias="from", examples=["2026-01-01T00:00:00Z"]),
     to_dt: datetime = Query(..., alias="to", examples=["2026-06-01T00:00:00Z"]),

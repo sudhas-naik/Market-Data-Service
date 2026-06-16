@@ -64,7 +64,7 @@ docker compose logs -f market-service
 |------|-----|
 | API docs (Swagger) | **http://localhost:8001/docs** |
 | Health check | http://localhost:8001/health |
-| Example quote | http://localhost:8001/market/quote/AAPL |
+| Example quote | http://localhost:8001/market/quote/RELIANCE |
 
 > Port **8001** is used (not 8000) because something on your machine already uses 8000.
 > Wait ~30–60 seconds on first start while Postgres becomes healthy.

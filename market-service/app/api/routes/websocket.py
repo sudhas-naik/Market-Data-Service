@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 async def market_websocket(websocket: WebSocket) -> None:
     """Live quote WebSocket endpoint.
 
-    Client sends: {"symbols": ["AAPL", "TSLA", "MSFT"]}
+    Client sends: {"symbols": ["RELIANCE", "TCS", "INFY"]}
     Server pushes latest prices periodically.
     """
     await websocket.accept()

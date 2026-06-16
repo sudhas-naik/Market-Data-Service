@@ -23,13 +23,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     try:
         redis = await get_redis()
-        provider = get_market_provider()
+        # provider = get_market_provider()
 
-        quote_worker = QuoteRefreshWorker(provider, redis)
-        news_worker = NewsWorker(provider, async_session_factory)
+        # quote_worker = QuoteRefreshWorker(provider, redis)
+        # news_worker = NewsWorker(provider, async_session_factory)
 
-        await quote_worker.start()
-        await news_worker.start()
+        # await quote_worker.start()
+        # await news_worker.start()
 
         logger.info("application_started")
         yield

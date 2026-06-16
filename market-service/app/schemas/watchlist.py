@@ -7,7 +7,7 @@ class WatchlistCreate(BaseModel):
     """Request body for creating/updating a watchlist."""
 
     name: str = Field(..., min_length=1, max_length=100, examples=["Tech Stocks"])
-    symbols: list[str] = Field(..., min_length=1, examples=[["AAPL", "TSLA", "MSFT"]])
+    symbols: list[str] = Field(..., min_length=1, examples=[["RELIANCE", "TCS", "INFY"]])
 
     @field_validator("symbols")
     @classmethod

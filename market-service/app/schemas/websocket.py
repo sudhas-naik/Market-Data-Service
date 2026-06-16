@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 class SubscribeMessage(BaseModel):
     """Client subscription message."""
 
-    symbols: list[str] = Field(..., min_length=1, examples=[["AAPL", "TSLA", "MSFT"]])
+    symbols: list[str] = Field(..., min_length=1, examples=[["RELIANCE", "TCS", "INFY"]])
 
     @field_validator("symbols")
     @classmethod

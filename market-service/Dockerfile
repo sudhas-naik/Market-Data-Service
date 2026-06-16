@@ -2,14 +2,13 @@ FROM python:3.13-slim AS base
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir uv
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY pyproject.toml README.md ./
 COPY app ./app
 COPY main.py alembic.ini entrypoint.sh ./
 COPY alembic ./alembic
-
-RUN uv pip install --system -e ".[dev]"
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1

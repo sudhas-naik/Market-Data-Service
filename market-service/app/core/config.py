@@ -42,10 +42,10 @@ class Settings(BaseSettings):
     news_fetch_interval_seconds: int = 300
 
     # Market Provider
-    market_provider: Literal["mock", "zerodha"] = "mock"
     zerodha_api_key: str | None = None
     zerodha_api_secret: str | None = None
     zerodha_access_token: str | None = None
+    zerodha_request_token: str | None = None
     zerodha_default_exchange: str = "NSE"
 
     @property

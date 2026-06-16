@@ -32,7 +32,7 @@ services:
     ports:
       - "8001:8000"  # host 8001 — avoids conflict if 8000 is already in use
     env_file:
-      - .env.example
+      - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://market:market@postgres:5432/market_db
       REDIS_URL: redis://redis:6379/0

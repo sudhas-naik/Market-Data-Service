@@ -12,8 +12,8 @@ from app.services.market_provider import MarketProvider
 
 logger = get_logger(__name__)
 
-# Default symbols to refresh when no watchlist data is available
-_DEFAULT_SYMBOLS = ["AAPL", "TSLA", "MSFT", "GOOGL", "AMZN"]
+# Default NSE symbols to refresh when no watchlist data is available.
+_DEFAULT_SYMBOLS = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"]
 
 
 class QuoteRefreshWorker:
