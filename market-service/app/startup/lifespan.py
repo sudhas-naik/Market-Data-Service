@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.cache.redis_client import close_redis, get_redis
+from app.core.firebase import init_firebase, shutdown_firebase
 from app.core.logging import get_logger
 from app.db.session import async_session_factory
 from app.services.market_provider import get_market_provider
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     news_worker: NewsWorker | None = None
 
     try:
+        init_firebase()
         redis = await get_redis()
         # provider = get_market_provider()
 
@@ -40,4 +42,5 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await news_worker.stop()
 
         await close_redis()
+        shutdown_firebase()
         logger.info("application_stopped")

@@ -113,27 +113,33 @@ async def watchlist_service(db_session: AsyncSession) -> WatchlistService:
 
 
 @pytest_asyncio.fixture
-async def test_app():
+async def test_app(monkeypatch):
     """Create test FastAPI app without background workers."""
     from contextlib import asynccontextmanager
 
     from fastapi import FastAPI
 
     from app.api.router import api_router
+    from app.core.config import get_settings
     from app.exceptions.base import AppException
     from app.exceptions.handlers import app_exception_handler, unhandled_exception_handler
-    from app.middleware.user_context import UserContextMiddleware
+    from app.middleware.firebase_auth import FirebaseAuthMiddleware
+
+    monkeypatch.setenv("FIREBASE_AUTH_ENABLED", "false")
+    monkeypatch.setenv("FIREBASE_AUTH_DEV_BYPASS", "true")
+    get_settings.cache_clear()
 
     @asynccontextmanager
     async def test_lifespan(_app: FastAPI):
         yield
 
     app = FastAPI(lifespan=test_lifespan)
-    app.add_middleware(UserContextMiddleware)
+    app.add_middleware(FirebaseAuthMiddleware)
     app.add_exception_handler(AppException, app_exception_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
     app.include_router(api_router)
-    return app
+    yield app
+    get_settings.cache_clear()
 
 
 @pytest_asyncio.fixture

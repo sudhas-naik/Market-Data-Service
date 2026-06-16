@@ -41,6 +41,28 @@ class Settings(BaseSettings):
     quote_refresh_interval_seconds: float = 1.0
     news_fetch_interval_seconds: int = 300
 
+    # Firebase Authentication
+    firebase_auth_enabled: bool = True
+    firebase_project_id: str | None = None
+    firebase_credentials_path: str | None = None
+    firebase_credentials_json: str | None = None
+    # Individual service account fields (alternative to JSON file)
+    firebase_private_key_id: str | None = None
+    firebase_private_key: str | None = None
+    firebase_client_email: str | None = None
+    firebase_client_id: str | None = None
+    firebase_client_x509_cert_url: str | None = None
+    # Dev only: allow X-User-ID header when Firebase auth is disabled
+    firebase_auth_dev_bypass: bool = False
+
+    def has_firebase_env_credentials(self) -> bool:
+        """Return True when required Firebase fields are set in environment."""
+        return bool(
+            self.firebase_project_id
+            and self.firebase_private_key
+            and self.firebase_client_email
+        )
+
     # Market Provider
     zerodha_api_key: str | None = None
     zerodha_api_secret: str | None = None

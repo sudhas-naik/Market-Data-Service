@@ -1,13 +1,6 @@
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
+# Firebase service account — DO NOT COMMIT
 .env
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.ruff_cache/
-dist/
-build/
-*.db
+secrets/
+firebase-service-account.json
+firebase-*.json
+*-firebase-adminsdk-*.json

@@ -4,11 +4,13 @@ from fastapi import FastAPI
 
 from app.api.router import api_router
 from app.core.config import get_settings
+from app.core.firebase import init_firebase, shutdown_firebase
 from app.core.logging import setup_logging
 from app.exceptions.base import AppException
+from app.exceptions.auth import UnauthorizedException
 from app.exceptions.handlers import app_exception_handler, unhandled_exception_handler
+from app.middleware.firebase_auth import FirebaseAuthMiddleware
 from app.middleware.logging import RequestLoggingMiddleware
-from app.middleware.user_context import UserContextMiddleware
 from app.startup.lifespan import lifespan
 
 setup_logging()
@@ -26,7 +28,7 @@ app = FastAPI(
 )
 
 app.add_middleware(RequestLoggingMiddleware)
-app.add_middleware(UserContextMiddleware)
+app.add_middleware(FirebaseAuthMiddleware)
 
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)

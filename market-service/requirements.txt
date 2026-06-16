@@ -11,6 +11,7 @@ httpx>=0.28.0
 python-dateutil>=2.9.0
 websockets>=14.0
 kiteconnect>=5.0.1
+firebase-admin>=6.6.0
 
 # Test/development dependencies
 pytest>=8.3.0

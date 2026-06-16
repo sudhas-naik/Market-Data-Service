@@ -3,13 +3,16 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPBearer
 
-from app.dependencies.watchlist import get_current_user_id, get_watchlist_service
+from app.dependencies.auth import get_current_user_id
+from app.dependencies.watchlist import get_watchlist_service
 from app.schemas.common import APIResponse
 from app.schemas.watchlist import WatchlistCreate, WatchlistResponse
 from app.services.watchlist_service import WatchlistService
 
 router = APIRouter()
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 @router.post(
@@ -17,7 +20,9 @@ router = APIRouter()
     response_model=APIResponse[WatchlistResponse],
     status_code=201,
     summary="Create or update watchlist",
-    description="Creates a new watchlist or updates an existing one with the same name.",
+    description="Creates a new watchlist or updates an existing one with the same name. "
+    "Requires Firebase ID token in Authorization header.",
+    dependencies=[Depends(bearer_scheme)],
 )
 async def create_watchlist(
     data: WatchlistCreate,
@@ -32,7 +37,9 @@ async def create_watchlist(
     "",
     response_model=APIResponse[list[WatchlistResponse]],
     summary="List watchlists",
-    description="Returns all watchlists for the authenticated user.",
+    description="Returns all watchlists for the authenticated user. "
+    "Requires Firebase ID token in Authorization header.",
+    dependencies=[Depends(bearer_scheme)],
 )
 async def list_watchlists(
     user_id: Annotated[str, Depends(get_current_user_id)],
@@ -46,7 +53,9 @@ async def list_watchlists(
     "/{symbol}",
     response_model=APIResponse[dict],
     summary="Remove symbol from watchlists",
-    description="Removes a symbol from all of the user's watchlists.",
+    description="Removes a symbol from all of the user's watchlists. "
+    "Requires Firebase ID token in Authorization header.",
+    dependencies=[Depends(bearer_scheme)],
 )
 async def remove_symbol(
     symbol: str,
