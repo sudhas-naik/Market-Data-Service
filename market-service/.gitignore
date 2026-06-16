@@ -4,3 +4,4 @@ secrets/
 firebase-service-account.json
 firebase-*.json
 *-firebase-adminsdk-*.json
+*.pyc
